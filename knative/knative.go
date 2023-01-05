@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/andikabahari/kissa/cluster"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -52,7 +51,7 @@ func mapByte(raw []byte) (map[string]interface{}, error) {
 
 func (k *knative) List(resource string) ([]byte, error) {
 	crd := fmt.Sprintf("%s/%s", k.crdPrefix, resource)
-	return cluster.Client.RESTClient().Get().AbsPath(crd).DoRaw(context.TODO())
+	return k.client.RESTClient().Get().AbsPath(crd).DoRaw(context.TODO())
 }
 
 func (k *knative) ListMap(resource string) (map[string]interface{}, error) {
@@ -66,11 +65,25 @@ func (k *knative) ListMap(resource string) (map[string]interface{}, error) {
 
 func (k *knative) Get(resource, name string) ([]byte, error) {
 	crd := fmt.Sprintf("%s/%s/%s", k.crdPrefix, resource, name)
-	return cluster.Client.RESTClient().Get().AbsPath(crd).DoRaw(context.TODO())
+	return k.client.RESTClient().Get().AbsPath(crd).DoRaw(context.TODO())
 }
 
 func (k *knative) GetMap(resource, name string) (map[string]interface{}, error) {
 	raw, err := k.Get(resource, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return mapByte(raw)
+}
+
+func (k *knative) Create(resource string, obj interface{}) ([]byte, error) {
+	crd := fmt.Sprintf("%s/%s", k.crdPrefix, resource)
+	return k.client.RESTClient().Post().AbsPath(crd).Body(obj).DoRaw(context.TODO())
+}
+
+func (k *knative) CreateMap(resource string, obj interface{}) (map[string]interface{}, error) {
+	raw, err := k.Create(resource, obj)
 	if err != nil {
 		return nil, err
 	}
