@@ -2,10 +2,10 @@ package knative
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 type Knative interface {
@@ -40,53 +40,17 @@ func (k *knative) Namespace() string {
 	return k.namespace
 }
 
-func mapByte(raw []byte) (map[string]interface{}, error) {
-	data := make(map[string]interface{})
-	if err := json.Unmarshal(raw, &data); err != nil {
-		return nil, err
-	}
-
-	return data, nil
-}
-
-func (k *knative) List(resource string) ([]byte, error) {
+func (k *knative) List(resource string) rest.Result {
 	crd := fmt.Sprintf("%s/%s", k.crdPrefix, resource)
-	return k.client.RESTClient().Get().AbsPath(crd).DoRaw(context.TODO())
+	return k.client.RESTClient().Get().AbsPath(crd).Do(context.TODO())
 }
 
-func (k *knative) ListMap(resource string) (map[string]interface{}, error) {
-	raw, err := k.List(resource)
-	if err != nil {
-		return nil, err
-	}
-
-	return mapByte(raw)
-}
-
-func (k *knative) Get(resource, name string) ([]byte, error) {
+func (k *knative) Get(resource, name string) rest.Result {
 	crd := fmt.Sprintf("%s/%s/%s", k.crdPrefix, resource, name)
-	return k.client.RESTClient().Get().AbsPath(crd).DoRaw(context.TODO())
+	return k.client.RESTClient().Get().AbsPath(crd).Do(context.TODO())
 }
 
-func (k *knative) GetMap(resource, name string) (map[string]interface{}, error) {
-	raw, err := k.Get(resource, name)
-	if err != nil {
-		return nil, err
-	}
-
-	return mapByte(raw)
-}
-
-func (k *knative) Create(resource string, obj interface{}) ([]byte, error) {
+func (k *knative) Create(resource string, obj interface{}) rest.Result {
 	crd := fmt.Sprintf("%s/%s", k.crdPrefix, resource)
-	return k.client.RESTClient().Post().AbsPath(crd).Body(obj).DoRaw(context.TODO())
-}
-
-func (k *knative) CreateMap(resource string, obj interface{}) (map[string]interface{}, error) {
-	raw, err := k.Create(resource, obj)
-	if err != nil {
-		return nil, err
-	}
-
-	return mapByte(raw)
+	return k.client.RESTClient().Post().AbsPath(crd).Body(obj).Do(context.TODO())
 }

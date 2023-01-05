@@ -1,10 +1,9 @@
 package knative
 
+import "k8s.io/client-go/rest"
+
 type KnativeAPI interface {
-	List(resource string) ([]byte, error)
-	ListMap(resource string) (map[string]interface{}, error)
-	Get(resource, name string) ([]byte, error)
-	GetMap(resource, name string) (map[string]interface{}, error)
-	Create(resource string, obj interface{}) ([]byte, error)
-	CreateMap(resource string, obj interface{}) (map[string]interface{}, error)
+	List(resource string) rest.Result
+	Get(resource, name string) rest.Result
+	Create(resource string, obj interface{}) rest.Result
 }

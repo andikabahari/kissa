@@ -10,7 +10,7 @@ import (
 	"github.com/andikabahari/kissa/dto"
 	"github.com/andikabahari/kissa/knative"
 	"github.com/go-chi/chi/v5"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/client-go/rest"
 )
 
 type ServiceHandler interface {
@@ -30,32 +30,14 @@ func NewServiceHandler(kn knative.Knative) ServiceHandler {
 }
 
 func (h *serviceHandler) List(w http.ResponseWriter, r *http.Request) {
-	data, err := h.knative.ListMap("services")
-	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			dto.JSONResponse(w, http.StatusNotFound, err.Error(), nil)
-			return
-		}
-
-		panic(err)
-	}
-
-	dto.JSONResponse(w, http.StatusOK, "success", data)
+	result := h.knative.List("services")
+	writeK8sResponse(w, result)
 }
 
 func (h *serviceHandler) Get(w http.ResponseWriter, r *http.Request) {
 	serviceName := chi.URLParam(r, "serviceName")
-	data, err := h.knative.GetMap("services", serviceName)
-	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			dto.JSONResponse(w, http.StatusNotFound, err.Error(), nil)
-			return
-		}
-
-		panic(err)
-	}
-
-	dto.JSONResponse(w, http.StatusOK, "success", data)
+	result := h.knative.Get("services", serviceName)
+	writeK8sResponse(w, result)
 }
 
 func (h *serviceHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -81,8 +63,25 @@ func (h *serviceHandler) Create(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	data, err := h.knative.CreateMap("services", buf.Bytes())
+	result := h.knative.Create("services", buf.Bytes())
+	writeK8sResponse(w, result)
+}
+
+func writeK8sResponse(w http.ResponseWriter, result rest.Result) {
+	code := 0
+	result.StatusCode(&code)
+	if code >= 400 {
+		dto.JSONResponse(w, code, result.Error().Error(), nil)
+		return
+	}
+
+	raw, err := result.Raw()
 	if err != nil {
+		panic(err)
+	}
+
+	data := make(map[string]interface{})
+	if err := json.Unmarshal(raw, &data); err != nil {
 		panic(err)
 	}
 
