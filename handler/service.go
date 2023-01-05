@@ -9,13 +9,11 @@ import (
 	"github.com/andikabahari/kissa/constants"
 	"github.com/andikabahari/kissa/dto"
 	"github.com/andikabahari/kissa/knative"
-	"github.com/go-chi/chi/v5"
 	"k8s.io/client-go/rest"
 )
 
 type ServiceHandler interface {
 	List(w http.ResponseWriter, r *http.Request)
-	Get(w http.ResponseWriter, r *http.Request)
 	Create(w http.ResponseWriter, r *http.Request)
 }
 
@@ -30,13 +28,14 @@ func NewServiceHandler(kn knative.Knative) ServiceHandler {
 }
 
 func (h *serviceHandler) List(w http.ResponseWriter, r *http.Request) {
-	result := h.knative.Get("services")
-	writeK8sResponse(w, result)
-}
+	resource := "services"
 
-func (h *serviceHandler) Get(w http.ResponseWriter, r *http.Request) {
-	serviceName := chi.URLParam(r, "serviceName")
-	result := h.knative.Get("services/" + serviceName)
+	serviceName := r.URL.Query().Get("service_name")
+	if serviceName != "" {
+		resource += "/" + serviceName
+	}
+
+	result := h.knative.Get(resource)
 	writeK8sResponse(w, result)
 }
 
