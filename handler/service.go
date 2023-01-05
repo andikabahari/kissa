@@ -30,13 +30,13 @@ func NewServiceHandler(kn knative.Knative) ServiceHandler {
 }
 
 func (h *serviceHandler) List(w http.ResponseWriter, r *http.Request) {
-	result := h.knative.List("services")
+	result := h.knative.Get("services")
 	writeK8sResponse(w, result)
 }
 
 func (h *serviceHandler) Get(w http.ResponseWriter, r *http.Request) {
 	serviceName := chi.URLParam(r, "serviceName")
-	result := h.knative.Get("services", serviceName)
+	result := h.knative.Get("services/" + serviceName)
 	writeK8sResponse(w, result)
 }
 

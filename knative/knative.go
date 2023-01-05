@@ -40,17 +40,18 @@ func (k *knative) Namespace() string {
 	return k.namespace
 }
 
-func (k *knative) List(resource string) rest.Result {
-	crd := fmt.Sprintf("%s/%s", k.crdPrefix, resource)
-	return k.client.RESTClient().Get().AbsPath(crd).Do(context.TODO())
-}
-
-func (k *knative) Get(resource, name string) rest.Result {
-	crd := fmt.Sprintf("%s/%s/%s", k.crdPrefix, resource, name)
-	return k.client.RESTClient().Get().AbsPath(crd).Do(context.TODO())
+func (k *knative) Get(resource string) rest.Result {
+	return k.client.
+		RESTClient().
+		Get().
+		AbsPath(k.crdPrefix + resource).
+		Do(context.TODO())
 }
 
 func (k *knative) Create(resource string, obj interface{}) rest.Result {
-	crd := fmt.Sprintf("%s/%s", k.crdPrefix, resource)
-	return k.client.RESTClient().Post().AbsPath(crd).Body(obj).Do(context.TODO())
+	return k.client.
+		RESTClient().
+		Post().
+		AbsPath(k.crdPrefix + resource).
+		Body(obj).Do(context.TODO())
 }
