@@ -66,3 +66,11 @@ func (k *knative) Update(resource string, obj interface{}) rest.Result {
 		Body(obj).
 		Do(context.TODO())
 }
+
+func (k *knative) Delete(resource string) rest.Result {
+	return k.client.
+		RESTClient().
+		Delete().
+		AbsPath(k.crdPrefix + resource).
+		Do(context.TODO())
+}

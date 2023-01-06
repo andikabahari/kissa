@@ -6,4 +6,5 @@ type KnativeAPI interface {
 	Get(resource string) rest.Result
 	Create(resource string, obj interface{}) rest.Result
 	Update(resource string, obj interface{}) rest.Result
+	Delete(resource string) rest.Result
 }

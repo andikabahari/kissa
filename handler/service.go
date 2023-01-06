@@ -9,6 +9,7 @@ import (
 	"github.com/andikabahari/kissa/constants"
 	"github.com/andikabahari/kissa/dto"
 	"github.com/andikabahari/kissa/knative"
+	"github.com/go-chi/chi/v5"
 	"k8s.io/client-go/rest"
 )
 
@@ -16,6 +17,7 @@ type ServiceHandler interface {
 	List(w http.ResponseWriter, r *http.Request)
 	Create(w http.ResponseWriter, r *http.Request)
 	Update(w http.ResponseWriter, r *http.Request)
+	Delete(w http.ResponseWriter, r *http.Request)
 }
 
 type serviceHandler struct {
@@ -69,6 +71,12 @@ func (h *serviceHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result := h.knative.Update("services/"+request.Name, buf.Bytes())
+	writeK8sResponse(w, result)
+}
+
+func (h *serviceHandler) Delete(w http.ResponseWriter, r *http.Request) {
+	serviceName := chi.URLParam(r, "serviceName")
+	result := h.knative.Delete("services/" + serviceName)
 	writeK8sResponse(w, result)
 }
 

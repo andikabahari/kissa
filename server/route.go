@@ -24,6 +24,7 @@ func Route(r *chi.Mux) {
 	r.Get("/api/services", serviceHandler.List)
 	r.Post("/api/services", serviceHandler.Create)
 	r.Put("/api/services", serviceHandler.Update)
+	r.Delete("/api/services/{serviceName}", serviceHandler.Delete)
 }
 
 func customRecoverer(next http.Handler) http.Handler {
