@@ -65,12 +65,15 @@ func (h *serviceHandler) Update(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	serviceName := chi.URLParam(r, "serviceName")
+	request.Name = serviceName
+
 	buf, err := serviceBuf(request)
 	if err != nil {
 		panic(err)
 	}
 
-	result := h.knative.Update("services/"+request.Name, buf.Bytes())
+	result := h.knative.Update("services/"+serviceName, buf.Bytes())
 	writeK8sResponse(w, result)
 }
 

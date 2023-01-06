@@ -23,7 +23,7 @@ func Route(r *chi.Mux) {
 	serviceHandler := handler.NewServiceHandler(kn)
 	r.Get("/api/services", serviceHandler.List)
 	r.Post("/api/services", serviceHandler.Create)
-	r.Put("/api/services", serviceHandler.Update)
+	r.Put("/api/services/{serviceName}", serviceHandler.Update)
 	r.Delete("/api/services/{serviceName}", serviceHandler.Delete)
 }
 
