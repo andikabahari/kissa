@@ -6,7 +6,6 @@ import (
 	"github.com/andikabahari/kissa/cluster"
 	"github.com/andikabahari/kissa/config"
 	"github.com/andikabahari/kissa/dto"
-	"github.com/andikabahari/kissa/errors"
 	"github.com/andikabahari/kissa/handler"
 	"github.com/andikabahari/kissa/knative"
 	"github.com/go-chi/chi/v5"
@@ -38,7 +37,7 @@ func customRecoverer(next http.Handler) http.Handler {
 				// buf = buf[:n]
 				// fmt.Print(string(buf))
 
-				dto.JSONResponse(w, http.StatusInternalServerError, errors.InternalServerError.Error(), nil)
+				dto.JSONResponse(w, http.StatusInternalServerError, "internal server error", nil)
 			}
 		}()
 
