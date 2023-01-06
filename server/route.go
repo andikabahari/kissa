@@ -3,10 +3,10 @@ package server
 import (
 	"net/http"
 
-	"github.com/andikabahari/kissa/cluster"
 	"github.com/andikabahari/kissa/config"
 	"github.com/andikabahari/kissa/dto"
 	"github.com/andikabahari/kissa/handler"
+	"github.com/andikabahari/kissa/internal/cluster"
 	"github.com/andikabahari/kissa/knative"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
