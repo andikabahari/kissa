@@ -3,6 +3,7 @@ package cluster
 import (
 	"flag"
 	"path/filepath"
+	"sync"
 
 	"github.com/andikabahari/kissa/config"
 	"k8s.io/client-go/kubernetes"
@@ -12,8 +13,13 @@ import (
 )
 
 var Client *kubernetes.Clientset
+var doOnce sync.Once
 
 func InitClient() {
+	doOnce.Do(initClient)
+}
+
+func initClient() {
 	kubeconfig, err := kubeconfig()
 	if err != nil {
 		panic(err)
