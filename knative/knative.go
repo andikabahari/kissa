@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -53,5 +54,15 @@ func (k *knative) Create(resource string, obj interface{}) rest.Result {
 		RESTClient().
 		Post().
 		AbsPath(k.crdPrefix + resource).
-		Body(obj).Do(context.TODO())
+		Body(obj).
+		Do(context.TODO())
+}
+
+func (k *knative) Update(resource string, obj interface{}) rest.Result {
+	return k.client.
+		RESTClient().
+		Patch(types.MergePatchType).
+		AbsPath(k.crdPrefix + resource).
+		Body(obj).
+		Do(context.TODO())
 }

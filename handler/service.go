@@ -3,8 +3,8 @@ package handler
 import (
 	"bytes"
 	"encoding/json"
-	"html/template"
 	"net/http"
+	"text/template"
 
 	"github.com/andikabahari/kissa/constants"
 	"github.com/andikabahari/kissa/dto"
@@ -15,6 +15,7 @@ import (
 type ServiceHandler interface {
 	List(w http.ResponseWriter, r *http.Request)
 	Create(w http.ResponseWriter, r *http.Request)
+	Update(w http.ResponseWriter, r *http.Request)
 }
 
 type serviceHandler struct {
@@ -46,23 +47,28 @@ func (h *serviceHandler) Create(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	tmpl, err := template.New("service").Parse(constants.KnativeServiceTemplate)
+	buf, err := serviceBuf(request)
 	if err != nil {
 		panic(err)
 	}
 
-	obj := knative.ServiceObject{
-		Name:          request.Name,
-		Image:         request.Image,
-		ContainerPort: request.ContainerPort,
-		Env:           request.Env,
-	}
-	buf := new(bytes.Buffer)
-	if err := tmpl.Execute(buf, obj); err != nil {
+	result := h.knative.Create("services", buf.Bytes())
+	writeK8sResponse(w, result)
+}
+
+func (h *serviceHandler) Update(w http.ResponseWriter, r *http.Request) {
+	request := dto.ServiceRequest{}
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		panic(err)
 	}
 
-	result := h.knative.Create("services", buf.Bytes())
+	buf, err := serviceBuf(request)
+	if err != nil {
+		panic(err)
+	}
+
+	result := h.knative.Update("services/"+request.Name, buf.Bytes())
 	writeK8sResponse(w, result)
 }
 
@@ -74,15 +80,44 @@ func writeK8sResponse(w http.ResponseWriter, result rest.Result) {
 		return
 	}
 
-	raw, err := result.Raw()
+	data, err := mapK8sResult(result)
 	if err != nil {
 		panic(err)
 	}
 
-	data := make(map[string]interface{})
-	if err := json.Unmarshal(raw, &data); err != nil {
-		panic(err)
+	dto.JSONResponse(w, http.StatusOK, "success", data)
+}
+
+func mapK8sResult(result rest.Result) (map[string]interface{}, error) {
+	raw, err := result.Raw()
+	if err != nil {
+		return nil, err
 	}
 
-	dto.JSONResponse(w, http.StatusOK, "success", data)
+	data := make(map[string]interface{})
+	if err := json.Unmarshal(raw, &data); err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+func serviceBuf(request dto.ServiceRequest) (*bytes.Buffer, error) {
+	tmpl, err := template.New("service").Parse(constants.KnativeServiceTemplate)
+	if err != nil {
+		return nil, err
+	}
+
+	obj := knative.ServiceObject{
+		Name:          request.Name,
+		Image:         request.Image,
+		ContainerPort: request.ContainerPort,
+		Env:           request.Env,
+	}
+	buf := new(bytes.Buffer)
+	if err := tmpl.Execute(buf, obj); err != nil {
+		return nil, err
+	}
+
+	return buf, nil
 }
