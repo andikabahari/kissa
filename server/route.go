@@ -1,48 +1,27 @@
 package server
 
 import (
-	"net/http"
-
 	"github.com/andikabahari/kissa/config"
-	"github.com/andikabahari/kissa/dto"
 	"github.com/andikabahari/kissa/handler"
 	"github.com/andikabahari/kissa/internal/cluster"
 	"github.com/andikabahari/kissa/knative"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/cors"
-	"github.com/rs/zerolog/log"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
-func Route(r *chi.Mux) {
-	r.Use(cors.AllowAll().Handler)
-	r.Use(customRecoverer)
+func Route(e *echo.Echo) {
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+	e.Use(middleware.CORS())
 
 	kn := knative.NewKnative(cluster.Client, config.Get().ClusterNamespace)
 
+	api := e.Group("/api")
+
 	serviceHandler := handler.NewServiceHandler(kn)
-	r.Get("/api/services", serviceHandler.List)
-	r.Post("/api/services", serviceHandler.Create)
-	r.Put("/api/services/{serviceName}", serviceHandler.Update)
-	r.Delete("/api/services/{serviceName}", serviceHandler.Delete)
-}
-
-func customRecoverer(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		defer func() {
-			if err := recover(); err != nil {
-				log.Error().Msgf("%v", err)
-
-				// buf := make([]byte, 2048)
-				// n := runtime.Stack(buf, false)
-				// buf = buf[:n]
-				// fmt.Print(string(buf))
-
-				dto.JSONResponse(w, http.StatusInternalServerError, "internal server error", nil)
-			}
-		}()
-
-		next.ServeHTTP(w, r)
-	}
-
-	return http.HandlerFunc(fn)
+	services := api.Group("/services")
+	services.GET("", serviceHandler.List)
+	services.POST("", serviceHandler.Create)
+	services.PUT("/:service_name", serviceHandler.Update)
+	services.DELETE("/:service_name", serviceHandler.Delete)
 }

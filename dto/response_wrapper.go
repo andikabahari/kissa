@@ -1,9 +1,6 @@
 package dto
 
-import (
-	"encoding/json"
-	"net/http"
-)
+import "github.com/labstack/echo/v4"
 
 type ResponseWrapper struct {
 	Code    int         `json:"code"`
@@ -11,13 +8,7 @@ type ResponseWrapper struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
-func JSONResponse(w http.ResponseWriter, code int, message string, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	res := ResponseWrapper{
-		Code:    code,
-		Message: message,
-		Data:    data,
-	}
-	json.NewEncoder(w).Encode(res)
+func JSONResponse(ctx echo.Context, code int, message string, data interface{}) error {
+	response := ResponseWrapper{code, message, data}
+	return ctx.JSON(code, response)
 }

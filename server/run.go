@@ -6,52 +6,32 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/andikabahari/kissa/config"
-	"github.com/go-chi/chi/v5"
-	"github.com/rs/zerolog/log"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 )
 
-func Run(r *chi.Mux) {
+func Run(e *echo.Echo) {
 	config := config.Get()
 
-	httpServer := &http.Server{
-		Addr:    fmt.Sprintf(":%d", config.HTTPPort),
-		Handler: r,
-	}
+	e.Logger.SetLevel(log.INFO)
 
-	serverCtx, serverStopCtx := context.WithCancel(context.Background())
-
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
-		<-sig
-
-		shutdownCtx, _ := context.WithTimeout(serverCtx, 30*time.Second)
-
-		go func() {
-			<-shutdownCtx.Done()
-			if shutdownCtx.Err() == context.DeadlineExceeded {
-				log.Fatal().Msg("graceful shutdown timed out...forcing exit.")
-			}
-		}()
-
-		err := httpServer.Shutdown(shutdownCtx)
-		if err != nil {
-			log.Error().Err(err)
+		if err := e.Start(fmt.Sprintf(":%d", config.HTTPPort)); err != nil && err != http.ErrServerClosed {
+			e.Logger.Fatal("shutting down the server")
 		}
-		serverStopCtx()
 	}()
 
-	log.Info().Msgf("server running on port %d", config.HTTPPort)
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
 
-	err := httpServer.ListenAndServe()
-	if err != nil && err != http.ErrServerClosed {
-		log.Error().Err(err)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := e.Shutdown(ctx); err != nil {
+		e.Logger.Fatal(err)
 	}
-
-	<-serverCtx.Done()
-	log.Print("server stopped")
 }

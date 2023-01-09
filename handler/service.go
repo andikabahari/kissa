@@ -9,15 +9,15 @@ import (
 	"github.com/andikabahari/kissa/constants"
 	"github.com/andikabahari/kissa/dto"
 	"github.com/andikabahari/kissa/knative"
-	"github.com/go-chi/chi/v5"
+	"github.com/labstack/echo/v4"
 	"k8s.io/client-go/rest"
 )
 
 type ServiceHandler interface {
-	List(w http.ResponseWriter, r *http.Request)
-	Create(w http.ResponseWriter, r *http.Request)
-	Update(w http.ResponseWriter, r *http.Request)
-	Delete(w http.ResponseWriter, r *http.Request)
+	List(c echo.Context) error
+	Create(c echo.Context) error
+	Update(c echo.Context) error
+	Delete(c echo.Context) error
 }
 
 type serviceHandler struct {
@@ -30,23 +30,35 @@ func NewServiceHandler(kn knative.Knative) ServiceHandler {
 	}
 }
 
-func (h *serviceHandler) List(w http.ResponseWriter, r *http.Request) {
+func (h *serviceHandler) List(c echo.Context) error {
 	resource := "services"
 
-	serviceName := r.URL.Query().Get("service_name")
+	serviceName := c.QueryParam("service_name")
 	if serviceName != "" {
 		resource += "/" + serviceName
 	}
 
 	result := h.knative.Get(resource)
-	writeK8sResponse(w, result)
+
+	var code int
+	result.StatusCode(&code)
+	if code >= 400 {
+		return dto.JSONResponse(c, code, result.Error().Error(), nil)
+	}
+
+	data, err := mapK8sResult(result)
+	if err != nil {
+		return err
+	}
+
+	return dto.JSONResponse(c, http.StatusOK, "success", data)
 }
 
-func (h *serviceHandler) Create(w http.ResponseWriter, r *http.Request) {
+func (h *serviceHandler) Create(c echo.Context) error {
 	request := dto.ServiceRequest{}
 
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		panic(err)
+	if err := c.Bind(&request); err != nil {
+		return err
 	}
 
 	buf, err := serviceBuf(request)
@@ -55,17 +67,29 @@ func (h *serviceHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result := h.knative.Create("services", buf.Bytes())
-	writeK8sResponse(w, result)
-}
 
-func (h *serviceHandler) Update(w http.ResponseWriter, r *http.Request) {
-	request := dto.ServiceRequest{}
-
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		panic(err)
+	var code int
+	result.StatusCode(&code)
+	if code >= 400 {
+		return dto.JSONResponse(c, code, result.Error().Error(), nil)
 	}
 
-	serviceName := chi.URLParam(r, "serviceName")
+	data, err := mapK8sResult(result)
+	if err != nil {
+		return err
+	}
+
+	return dto.JSONResponse(c, http.StatusOK, "success", data)
+}
+
+func (h *serviceHandler) Update(c echo.Context) error {
+	request := dto.ServiceRequest{}
+
+	if err := c.Bind(&request); err != nil {
+		return err
+	}
+
+	serviceName := c.Param("service_name")
 	request.Name = serviceName
 
 	buf, err := serviceBuf(request)
@@ -74,29 +98,38 @@ func (h *serviceHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result := h.knative.Update("services/"+serviceName, buf.Bytes())
-	writeK8sResponse(w, result)
-}
 
-func (h *serviceHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	serviceName := chi.URLParam(r, "serviceName")
-	result := h.knative.Delete("services/" + serviceName)
-	writeK8sResponse(w, result)
-}
-
-func writeK8sResponse(w http.ResponseWriter, result rest.Result) {
 	code := 0
 	result.StatusCode(&code)
 	if code >= 400 {
-		dto.JSONResponse(w, code, result.Error().Error(), nil)
-		return
+		return dto.JSONResponse(c, code, result.Error().Error(), nil)
 	}
 
 	data, err := mapK8sResult(result)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	dto.JSONResponse(w, http.StatusOK, "success", data)
+	return dto.JSONResponse(c, http.StatusOK, "success", data)
+}
+
+func (h *serviceHandler) Delete(c echo.Context) error {
+	serviceName := c.Param("service_name")
+
+	result := h.knative.Delete("services/" + serviceName)
+
+	code := 0
+	result.StatusCode(&code)
+	if code >= 400 {
+		return dto.JSONResponse(c, code, result.Error().Error(), nil)
+	}
+
+	data, err := mapK8sResult(result)
+	if err != nil {
+		return err
+	}
+
+	return dto.JSONResponse(c, http.StatusOK, "success", data)
 }
 
 func mapK8sResult(result rest.Result) (map[string]interface{}, error) {

@@ -3,12 +3,12 @@ package main
 import (
 	"github.com/andikabahari/kissa/internal/cluster"
 	"github.com/andikabahari/kissa/server"
-	"github.com/go-chi/chi/v5"
+	"github.com/labstack/echo/v4"
 )
 
 func main() {
 	cluster.InitClient()
-	r := chi.NewRouter()
-	server.Route(r)
-	server.Run(r)
+	e := echo.New()
+	server.Route(e)
+	server.Run(e)
 }
