@@ -1,22 +1,7 @@
 import useSWR from 'swr'
 import Link from 'next/link'
-
-const rightPointerIcon = (
-  <svg
-    xmlns='http://www.w3.org/2000/svg'
-    fill='none'
-    viewBox='0 0 24 24'
-    strokeWidth={1.5}
-    stroke='currentColor'
-    className='w-10 border rounded-lg shadow-md p-2 hover:cursor-pointer active:bg-gray-200 text-slate-700 hover:text-slate-900 active:text-slate-900'
-  >
-    <path
-      strokeLinecap='round'
-      strokeLinejoin='round'
-      d='M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3'
-    />
-  </svg>
-)
+import { Button, Table } from 'flowbite-react'
+import Head from 'next/head'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
@@ -24,62 +9,51 @@ export default function Home() {
   const { data: services } = useSWR('/api/services', fetcher)
 
   return (
-    <div className='flex flex-col'>
-      <div className='overflow-x-auto sm:-mx-6 lg:-mx-8'>
-        <div className='py-2 inline-block min-w-full sm:px-6 lg:px-8'>
-          <div className='overflow-hidden'>
-            <table className='min-w-full'>
-              <thead className='border-b'>
-                <tr>
-                  <th className='text-sm font-medium text-gray-900 px-6 py-4 text-left'>
-                    #
-                  </th>
-                  <th className='text-sm font-medium text-gray-900 px-6 py-4 text-left'>
-                    Name
-                  </th>
-                  <th className='text-sm font-medium text-gray-900 px-6 py-4 text-left'>
-                    URL
-                  </th>
-                  <th className='text-sm font-medium text-gray-900 px-6 py-4 text-left'>
-                    Last Deployed
-                  </th>
-                  <th className='text-sm font-medium text-gray-900 px-6 py-4 text-left'>
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {services?.data?.items?.map((elem: any, idx: number) => (
-                  <tr className='border-b' key={idx}>
-                    <td className='px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900'>
-                      {idx + 1}
-                    </td>
-                    <td className='text-sm text-gray-900 font-light px-6 py-2 whitespace-nowrap'>
-                      {elem.metadata?.name}
-                    </td>
-                    <td className='text-sm text-gray-900 font-light px-6 py-2 whitespace-nowrap'>
-                      <Link
-                        href={elem.status?.url}
-                        className='text-blue-700 ease-linear duration-200 hover:text-blue-900 hover:cursor-pointer'
-                      >
-                        {elem.status.url}
-                      </Link>
-                    </td>
-                    <td className='text-sm text-gray-900 font-light px-6 py-2 whitespace-nowrap'>
-                      {elem.spec?.template?.metadata?.annotations?.[
-                        'client.knative.dev/updateTimestamp'
-                      ] || elem.metadata?.creationTimestamp}
-                    </td>
-                    <td className='text-sm text-gray-900 font-light px-6 py-2 whitespace-nowrap'>
-                      {rightPointerIcon}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+    <>
+      <Head>
+        <title>Kissa</title>
+      </Head>
+      <div className='overflow-y-auto max-h-[576px] mt-8'>
+        <Table hoverable={true}>
+          <Table.Head>
+            <Table.HeadCell>Service</Table.HeadCell>
+            <Table.HeadCell>Last Deployed</Table.HeadCell>
+            <Table.HeadCell>
+              <span className='sr-only'>Details</span>
+            </Table.HeadCell>
+          </Table.Head>
+          <Table.Body className='divide-y'>
+            {services?.data?.items?.map((val: any, idx: number) => (
+              <Table.Row
+                key={idx}
+                className='bg-white dark:border-gray-700 dark:bg-gray-800'
+              >
+                <Table.Cell className='whitespace-nowrap font-medium text-gray-900 dark:text-white'>
+                  <Link
+                    href={val.status?.url}
+                    className='text-blue-500 ease-linear duration-200 hover:text-blue-700 hover:cursor-pointer'
+                  >
+                    {val.metadata?.name}
+                  </Link>
+                </Table.Cell>
+                <Table.Cell>
+                  {val.spec?.template?.metadata?.annotations?.[
+                    'client.knative.dev/updateTimestamp'
+                  ] || val.metadata?.creationTimestamp}
+                </Table.Cell>
+                <Table.Cell>
+                  <Link
+                    href={`/services/details/${val.metadata?.name}`}
+                    className='text-blue-500 ease-linear duration-200 hover:text-blue-700 hover:cursor-pointer'
+                  >
+                    Details
+                  </Link>
+                </Table.Cell>
+              </Table.Row>
+            ))}
+          </Table.Body>
+        </Table>
       </div>
-    </div>
+    </>
   )
 }

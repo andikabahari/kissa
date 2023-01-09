@@ -1,16 +1,24 @@
+import { Button, Navbar as FlowbiteNavbar } from 'flowbite-react'
 import Link from 'next/link'
+import styles from './Navbar.module.css'
 
 export default function Navbar() {
   return (
-    <nav className='mb-5  border-gray-300 border-b'>
-      <ul className='flex flex-row justify-center'>
-        <Link
-          href='/'
-          className='text-gray-700 font-medium ease-linear duration-200 hover:text-gray-900 hover:cursor-pointer'
-        >
-          <li className='p-3 mx-2'>Kissa</li>
-        </Link>
-      </ul>
-    </nav>
+    <div className={styles.Navbar}>
+      <div className='border-b mb-4'>
+        <div className='container max-w-screen-lg mx-auto px-6'>
+          <FlowbiteNavbar fluid={true} rounded={false} className='!px-0'>
+            <Link href='/'>
+              <span className='self-center whitespace-nowrap text-xl font-semibold text-blue-700 dark:text-white'>
+                Kissa
+              </span>
+            </Link>
+            <Link href='/services/deploy'>
+              <Button gradientDuoTone='cyanToBlue'>Deploy 🚀</Button>
+            </Link>
+          </FlowbiteNavbar>
+        </div>
+      </div>
+    </div>
   )
 }
