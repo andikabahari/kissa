@@ -63,7 +63,7 @@ func (h *serviceHandler) Create(c echo.Context) error {
 
 	buf, err := serviceBuf(request)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	result := h.knative.Create("services", buf.Bytes())
@@ -94,7 +94,7 @@ func (h *serviceHandler) Update(c echo.Context) error {
 
 	buf, err := serviceBuf(request)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	result := h.knative.Update("services/"+serviceName, buf.Bytes())
