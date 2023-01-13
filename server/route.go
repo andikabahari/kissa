@@ -22,6 +22,13 @@ func Route(e *echo.Echo) {
 	services := api.Group("/services")
 	services.GET("", serviceHandler.List)
 	services.POST("", serviceHandler.Create)
-	services.PUT("/:service_name", serviceHandler.Update)
+	services.GET("/:service_name", serviceHandler.Get)
+	services.PATCH("/:service_name", serviceHandler.Update)
 	services.DELETE("/:service_name", serviceHandler.Delete)
+
+	revisionHandler := handler.NewRevisionHandler(kn)
+	revisions := api.Group("/revisions")
+	revisions.GET("", revisionHandler.List)
+	revisions.GET("/:revision_name", revisionHandler.Get)
+	revisions.DELETE("/:revision_name", revisionHandler.Delete)
 }

@@ -41,19 +41,25 @@ func (k *knative) Namespace() string {
 	return k.namespace
 }
 
-func (k *knative) Get(resource string) rest.Result {
-	return k.client.
-		RESTClient().
-		Get().
-		AbsPath(k.crdPrefix + resource).
-		Do(context.TODO())
+func (k *knative) crdPath(resource string) string {
+	return k.crdPrefix + resource
+}
+
+func (k *knative) Get(resource, labelSelector string) rest.Result {
+	restClient := k.client.RESTClient().Get()
+
+	if labelSelector != "" {
+		restClient.Param("labelSelector", labelSelector)
+	}
+
+	return restClient.AbsPath(k.crdPath(resource)).Do(context.TODO())
 }
 
 func (k *knative) Create(resource string, obj interface{}) rest.Result {
 	return k.client.
 		RESTClient().
 		Post().
-		AbsPath(k.crdPrefix + resource).
+		AbsPath(k.crdPath(resource)).
 		Body(obj).
 		Do(context.TODO())
 }
@@ -62,7 +68,7 @@ func (k *knative) Update(resource string, obj interface{}) rest.Result {
 	return k.client.
 		RESTClient().
 		Patch(types.MergePatchType).
-		AbsPath(k.crdPrefix + resource).
+		AbsPath(k.crdPath(resource)).
 		Body(obj).
 		Do(context.TODO())
 }
@@ -71,6 +77,6 @@ func (k *knative) Delete(resource string) rest.Result {
 	return k.client.
 		RESTClient().
 		Delete().
-		AbsPath(k.crdPrefix + resource).
+		AbsPath(k.crdPath(resource)).
 		Do(context.TODO())
 }

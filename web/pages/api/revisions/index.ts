@@ -6,7 +6,7 @@ export default async function handler(
   nextRes: NextApiResponse
 ) {
   try {
-    const url = new URL(`${KISSA_SERVER_URL}/api/services`)
+    const url = new URL(`${KISSA_SERVER_URL}/api/revisions`)
     let serviceName: string
     let res: Response
     let body: any
@@ -17,15 +17,6 @@ export default async function handler(
         res = await fetch(url)
         body = await res.json()
         nextRes.status(body.code).json(body)
-        break
-      case 'POST':
-        res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(nextReq.body),
-        })
-        body = await res.json()
-        nextRes.status(res.status).json(body)
         break
       default:
         nextRes.status(404).json({ message: 'not found' })

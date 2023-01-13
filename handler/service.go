@@ -1,20 +1,17 @@
 package handler
 
 import (
-	"bytes"
-	"encoding/json"
 	"net/http"
-	"text/template"
 
-	"github.com/andikabahari/kissa/constants"
 	"github.com/andikabahari/kissa/dto"
 	"github.com/andikabahari/kissa/knative"
+	"github.com/andikabahari/kissa/util"
 	"github.com/labstack/echo/v4"
-	"k8s.io/client-go/rest"
 )
 
 type ServiceHandler interface {
 	List(c echo.Context) error
+	Get(c echo.Context) error
 	Create(c echo.Context) error
 	Update(c echo.Context) error
 	Delete(c echo.Context) error
@@ -31,14 +28,7 @@ func NewServiceHandler(kn knative.Knative) ServiceHandler {
 }
 
 func (h *serviceHandler) List(c echo.Context) error {
-	resource := "services"
-
-	serviceName := c.QueryParam("service_name")
-	if serviceName != "" {
-		resource += "/" + serviceName
-	}
-
-	result := h.knative.Get(resource)
+	result := h.knative.Get("services", "")
 
 	var code int
 	result.StatusCode(&code)
@@ -46,7 +36,25 @@ func (h *serviceHandler) List(c echo.Context) error {
 		return dto.JSONResponse(c, code, result.Error().Error(), nil)
 	}
 
-	data, err := mapK8sResult(result)
+	data, err := util.MapK8sResult(result)
+	if err != nil {
+		return err
+	}
+
+	return dto.JSONResponse(c, http.StatusOK, "success", data["items"])
+}
+
+func (h *serviceHandler) Get(c echo.Context) error {
+	serviceName := c.Param("service_name")
+	result := h.knative.Get("services/"+serviceName, "")
+
+	var code int
+	result.StatusCode(&code)
+	if code >= 400 {
+		return dto.JSONResponse(c, code, result.Error().Error(), nil)
+	}
+
+	data, err := util.MapK8sResult(result)
 	if err != nil {
 		return err
 	}
@@ -61,7 +69,7 @@ func (h *serviceHandler) Create(c echo.Context) error {
 		return err
 	}
 
-	buf, err := serviceBuf(request)
+	buf, err := util.ServiceBuf(request)
 	if err != nil {
 		return err
 	}
@@ -74,7 +82,7 @@ func (h *serviceHandler) Create(c echo.Context) error {
 		return dto.JSONResponse(c, code, result.Error().Error(), nil)
 	}
 
-	data, err := mapK8sResult(result)
+	data, err := util.MapK8sResult(result)
 	if err != nil {
 		return err
 	}
@@ -92,7 +100,7 @@ func (h *serviceHandler) Update(c echo.Context) error {
 	serviceName := c.Param("service_name")
 	request.Name = serviceName
 
-	buf, err := serviceBuf(request)
+	buf, err := util.ServiceBuf(request)
 	if err != nil {
 		return err
 	}
@@ -105,7 +113,7 @@ func (h *serviceHandler) Update(c echo.Context) error {
 		return dto.JSONResponse(c, code, result.Error().Error(), nil)
 	}
 
-	data, err := mapK8sResult(result)
+	data, err := util.MapK8sResult(result)
 	if err != nil {
 		return err
 	}
@@ -124,44 +132,10 @@ func (h *serviceHandler) Delete(c echo.Context) error {
 		return dto.JSONResponse(c, code, result.Error().Error(), nil)
 	}
 
-	data, err := mapK8sResult(result)
+	data, err := util.MapK8sResult(result)
 	if err != nil {
 		return err
 	}
 
 	return dto.JSONResponse(c, http.StatusOK, "success", data)
-}
-
-func mapK8sResult(result rest.Result) (map[string]interface{}, error) {
-	raw, err := result.Raw()
-	if err != nil {
-		return nil, err
-	}
-
-	data := make(map[string]interface{})
-	if err := json.Unmarshal(raw, &data); err != nil {
-		return nil, err
-	}
-
-	return data, nil
-}
-
-func serviceBuf(request dto.ServiceRequest) (*bytes.Buffer, error) {
-	tmpl, err := template.New("service").Parse(constants.KnativeServiceTemplate)
-	if err != nil {
-		return nil, err
-	}
-
-	obj := knative.ServiceObject{
-		Name:          request.Name,
-		Image:         request.Image,
-		ContainerPort: request.ContainerPort,
-		Env:           request.Env,
-	}
-	buf := new(bytes.Buffer)
-	if err := tmpl.Execute(buf, obj); err != nil {
-		return nil, err
-	}
-
-	return buf, nil
 }

@@ -1,6 +1,6 @@
 import useSWR from 'swr'
 import Link from 'next/link'
-import { Button, Table } from 'flowbite-react'
+import { Badge, Table } from 'flowbite-react'
 import Head from 'next/head'
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
@@ -17,13 +17,14 @@ export default function Home() {
         <Table hoverable={true}>
           <Table.Head>
             <Table.HeadCell>Service</Table.HeadCell>
+            <Table.HeadCell>Ready</Table.HeadCell>
             <Table.HeadCell>Last Deployed</Table.HeadCell>
             <Table.HeadCell>
               <span className='sr-only'>Details</span>
             </Table.HeadCell>
           </Table.Head>
           <Table.Body className='divide-y'>
-            {services?.data?.items?.map((val: any, idx: number) => (
+            {services?.data?.map((val: any, idx: number) => (
               <Table.Row
                 key={idx}
                 className='bg-white dark:border-gray-700 dark:bg-gray-800'
@@ -35,6 +36,17 @@ export default function Home() {
                   >
                     {val.metadata?.name}
                   </Link>
+                </Table.Cell>
+                <Table.Cell>
+                  <div className='inline-block'>
+                    {val.status?.conditions?.some(
+                      ({ status }: any) => status === 'False'
+                    ) ? (
+                      <Badge color='failure'>False</Badge>
+                    ) : (
+                      <Badge color='success'>True</Badge>
+                    )}
+                  </div>
                 </Table.Cell>
                 <Table.Cell>
                   {val.spec?.template?.metadata?.annotations?.[
