@@ -1,0 +1,6 @@
+PORT="8008"
+NAMESPACE="default"
+KUBECONFIG_PATH="${HOME}/.kube/config"
+
+run-server:
+	PORT=${PORT} NAMESPACE=${NAMESPACE} KUBECONFIG_PATH=${KUBECONFIG_PATH} go run .
