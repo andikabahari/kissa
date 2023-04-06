@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"net/http"
 	"text/template"
 
@@ -48,7 +49,7 @@ type serviceRequest struct {
 }
 
 func (h *Handler) ListService(c echo.Context) error {
-	result := h.knative.Service().List(c.Request().Context())
+	result := h.knative.Service().List(context.Background())
 
 	var code int
 	result.StatusCode(&code)
@@ -66,7 +67,7 @@ func (h *Handler) ListService(c echo.Context) error {
 
 func (h *Handler) GetService(c echo.Context) error {
 	serviceName := c.Param("service_name")
-	result := h.knative.Service().Get(c.Request().Context(), serviceName)
+	result := h.knative.Service().Get(context.Background(), serviceName)
 
 	var code int
 	result.StatusCode(&code)
@@ -94,7 +95,7 @@ func (h *Handler) CreateService(c echo.Context) error {
 		return err
 	}
 
-	result := h.knative.Service().Create(c.Request().Context(), buf.Bytes())
+	result := h.knative.Service().Create(context.Background(), buf.Bytes())
 
 	var code int
 	result.StatusCode(&code)
@@ -125,7 +126,7 @@ func (h *Handler) UpdateService(c echo.Context) error {
 		return err
 	}
 
-	result := h.knative.Service().Update(c.Request().Context(), buf.Bytes())
+	result := h.knative.Service().Update(context.Background(), buf.Bytes())
 
 	code := 0
 	result.StatusCode(&code)
@@ -144,7 +145,7 @@ func (h *Handler) UpdateService(c echo.Context) error {
 func (h *Handler) DeleteService(c echo.Context) error {
 	serviceName := c.Param("service_name")
 
-	result := h.knative.Service().Delete(c.Request().Context(), serviceName)
+	result := h.knative.Service().Delete(context.Background(), serviceName)
 
 	code := 0
 	result.StatusCode(&code)
