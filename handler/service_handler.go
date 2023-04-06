@@ -10,40 +10,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-const serviceTemplate = `{
-	"apiVersion": "serving.knative.dev/v1",
-	"kind": "Service",
-	"metadata": {
-		"name": "{{.Name}}"
-	},
-	"spec": {
-		"template": {
-			"spec": {
-				"containers": [
-					{
-						"image": "{{.Image}}",
-						"ports": [
-							{
-								"containerPort": {{.ContainerPort}}
-							}
-						]
-						{{if .Env}}
-						,
-						"env": [
-							{{$env := .Env}}
-							{{range $idx, $elem := .Env}}
-							{{if $idx}},{{end}}
-							{"name":"{{$elem.Name}}","value":"{{$elem.Value}}"}
-							{{end}}
-						]
-						{{end}}
-					}
-				]
-			}
-		}
-	}
-}`
-
 type serviceRequest struct {
 	knative.ServiceObject
 }
@@ -160,6 +126,40 @@ func (h *Handler) DeleteService(c echo.Context) error {
 
 	return jsonResponse(c, http.StatusOK, "success", data)
 }
+
+const serviceTemplate = `{
+	"apiVersion": "serving.knative.dev/v1",
+	"kind": "Service",
+	"metadata": {
+		"name": "{{.Name}}"
+	},
+	"spec": {
+		"template": {
+			"spec": {
+				"containers": [
+					{
+						"image": "{{.Image}}",
+						"ports": [
+							{
+								"containerPort": {{.ContainerPort}}
+							}
+						]
+						{{if .Env}}
+						,
+						"env": [
+							{{$env := .Env}}
+							{{range $idx, $elem := .Env}}
+							{{if $idx}},{{end}}
+							{"name":"{{$elem.Name}}","value":"{{$elem.Value}}"}
+							{{end}}
+						]
+						{{end}}
+					}
+				]
+			}
+		}
+	}
+}`
 
 func serviceBuf(request serviceRequest) (*bytes.Buffer, error) {
 	tmpl, err := template.New("service").Parse(serviceTemplate)
