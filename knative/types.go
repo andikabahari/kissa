@@ -1,13 +1,38 @@
 package knative
 
-type ObjectEnv struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
+import "time"
+
+type ServiceItem struct {
+	ApiVersion string
+	Kind       string
+	Metadata   struct {
+		Annotations       map[string]interface{}
+		CreationTimestamp time.Time
+		Generation        int
+		ManagedFields     []map[string]interface{}
+		Name              string
+		Namespace         string
+		ResourceVersion   string
+		Uid               string
+	}
+	Spec struct {
+		Template map[string]interface{}
+		Traffic  []map[string]interface{}
+	}
+	Status struct {
+		Address                   map[string]interface{}
+		Conditions                []map[string]interface{}
+		LatestCreatedRevisionName string
+		LatestReadyRevisionName   string
+		ObservedGeneration        int
+		Traffic                   []map[string]interface{}
+		Url                       string
+	}
 }
 
-type ServiceObject struct {
-	Name          string      `json:"name"`
-	Image         string      `json:"image"`
-	ContainerPort int         `json:"container_port"`
-	Env           []ObjectEnv `json:"env"`
+type ServiceList struct {
+	ApiVersion string
+	Items      []ServiceItem
+	Kind       string
+	Metadata   map[string]interface{}
 }

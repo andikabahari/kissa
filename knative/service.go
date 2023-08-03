@@ -44,10 +44,10 @@ func (s *service) Create(ctx context.Context, obj interface{}) rest.Result {
 		Do(ctx)
 }
 
-func (s *service) Update(ctx context.Context, obj interface{}) rest.Result {
+func (s *service) Update(ctx context.Context, name string, obj interface{}) rest.Result {
 	return s.client.
 		Patch(types.MergePatchType).
-		AbsPath(s.pathPrefix, "services").
+		AbsPath(s.pathPrefix, "services", name).
 		Body(obj).
 		Do(ctx)
 }

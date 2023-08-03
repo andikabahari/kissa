@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -13,7 +14,7 @@ func (h *Handler) ListRevision(c echo.Context) error {
 		labelSelector = "serving.knative.dev/service=" + serviceName
 	}
 
-	result := h.knative.Revision().List(c.Request().Context(), labelSelector)
+	result := h.knative.Revision().List(context.Background(), labelSelector)
 
 	var code int
 	result.StatusCode(&code)
@@ -31,7 +32,7 @@ func (h *Handler) ListRevision(c echo.Context) error {
 
 func (h *Handler) GetRevision(c echo.Context) error {
 	revisionName := c.Param("revision_name")
-	result := h.knative.Revision().Get(c.Request().Context(), revisionName)
+	result := h.knative.Revision().Get(context.Background(), revisionName)
 
 	var code int
 	result.StatusCode(&code)
@@ -50,7 +51,7 @@ func (h *Handler) GetRevision(c echo.Context) error {
 func (h *Handler) DeleteRevision(c echo.Context) error {
 	revisionName := c.Param("revision_name")
 
-	result := h.knative.Revision().Delete(c.Request().Context(), revisionName)
+	result := h.knative.Revision().Delete(context.Background(), revisionName)
 
 	code := 0
 	result.StatusCode(&code)
