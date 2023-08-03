@@ -1,11 +1,9 @@
 package api
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
-	"text/template"
 
 	"github.com/andikabahari/kissa/knative"
 	"github.com/labstack/echo/v4"
@@ -30,7 +28,7 @@ func (h *Handler) ListService(c echo.Context) error {
 		return err
 	}
 
-	resp := newServicesResponse(obj)
+	resp := newServiceResponses(obj)
 
 	return jsonResponse(c, http.StatusOK, "success", resp)
 }
@@ -145,18 +143,4 @@ func (h *Handler) DeleteService(c echo.Context) error {
 	}
 
 	return jsonResponse(c, http.StatusOK, "success", nil)
-}
-
-func serviceBuf(request serviceRequest) (*bytes.Buffer, error) {
-	tmpl, err := template.New("service").Parse(serviceTemplate)
-	if err != nil {
-		return nil, err
-	}
-
-	buf := new(bytes.Buffer)
-	if err := tmpl.Execute(buf, request); err != nil {
-		return nil, err
-	}
-
-	return buf, nil
 }

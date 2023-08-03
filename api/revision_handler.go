@@ -2,8 +2,10 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
+	"github.com/andikabahari/kissa/knative"
 	"github.com/labstack/echo/v4"
 )
 
@@ -22,12 +24,19 @@ func (h *Handler) ListRevision(c echo.Context) error {
 		return jsonResponse(c, code, result.Error().Error(), nil)
 	}
 
-	data, err := mapK8sResult(result)
+	raw, err := result.Raw()
 	if err != nil {
 		return err
 	}
 
-	return jsonResponse(c, http.StatusOK, "success", data["items"])
+	obj := knative.RevisionList{}
+	if err := json.Unmarshal(raw, &obj); err != nil {
+		return err
+	}
+
+	resp := newRevisionResponses(obj)
+
+	return jsonResponse(c, http.StatusOK, "success", resp)
 }
 
 func (h *Handler) GetRevision(c echo.Context) error {
@@ -40,12 +49,19 @@ func (h *Handler) GetRevision(c echo.Context) error {
 		return jsonResponse(c, code, result.Error().Error(), nil)
 	}
 
-	data, err := mapK8sResult(result)
+	raw, err := result.Raw()
 	if err != nil {
 		return err
 	}
 
-	return jsonResponse(c, http.StatusOK, "success", data)
+	obj := knative.RevisionItem{}
+	if err := json.Unmarshal(raw, &obj); err != nil {
+		return err
+	}
+
+	resp := newRevisionResponse(obj)
+
+	return jsonResponse(c, http.StatusOK, "success", resp)
 }
 
 func (h *Handler) DeleteRevision(c echo.Context) error {
@@ -59,10 +75,5 @@ func (h *Handler) DeleteRevision(c echo.Context) error {
 		return jsonResponse(c, code, result.Error().Error(), nil)
 	}
 
-	data, err := mapK8sResult(result)
-	if err != nil {
-		return err
-	}
-
-	return jsonResponse(c, http.StatusOK, "success", data)
+	return jsonResponse(c, http.StatusOK, "success", nil)
 }

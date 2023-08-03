@@ -1,5 +1,10 @@
 package api
 
+import (
+	"bytes"
+	"text/template"
+)
+
 type serviceRequest struct {
 	Name          string `json:"name"`
 	Image         string `json:"image"`
@@ -55,3 +60,17 @@ const serviceTemplate = `{
 		}
 	}
 }`
+
+func serviceBuf(request serviceRequest) (*bytes.Buffer, error) {
+	tmpl, err := template.New("service").Parse(serviceTemplate)
+	if err != nil {
+		return nil, err
+	}
+
+	buf := new(bytes.Buffer)
+	if err := tmpl.Execute(buf, request); err != nil {
+		return nil, err
+	}
+
+	return buf, nil
+}

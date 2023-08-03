@@ -8,11 +8,11 @@ import (
 )
 
 type serviceResponse struct {
-	LastDeployed time.Time `json:"last_deployed,omitempty"`
-	Name         string    `json:"name,omitempty"`
-	Uid          string    `json:"uid,omitempty"`
-	Url          string    `json:"url,omitempty"`
-	Ready        bool      `json:"ready,omitempty"`
+	LastDeployed time.Time `json:"last_deployed"`
+	Name         string    `json:"name"`
+	Uid          string    `json:"uid"`
+	Url          string    `json:"url"`
+	Ready        bool      `json:"ready"`
 }
 
 func newServiceResponse(obj knative.ServiceItem) serviceResponse {
@@ -31,8 +31,8 @@ func newServiceResponse(obj knative.ServiceItem) serviceResponse {
 	return resp
 }
 
-func newServicesResponse(obj knative.ServiceList) []serviceResponse {
-	resp := make([]serviceResponse, 0)
+func newServiceResponses(obj knative.ServiceList) []serviceResponse {
+	resp := make([]serviceResponse, len(obj.Items))
 	for _, item := range obj.Items {
 		resp = append(resp, newServiceResponse(item))
 	}
@@ -41,9 +41,9 @@ func newServicesResponse(obj knative.ServiceList) []serviceResponse {
 
 func conditionReady(conditions []map[string]interface{}) bool {
 	for _, condition := range conditions {
-		if strings.EqualFold(condition["status"].(string), "true") {
-			return true
+		if strings.EqualFold(condition["status"].(string), "false") {
+			return false
 		}
 	}
-	return false
+	return true
 }
