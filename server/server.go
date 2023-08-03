@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/andikabahari/kissa/handler"
+	"github.com/andikabahari/kissa/api"
 	"github.com/andikabahari/kissa/knative"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -18,13 +18,13 @@ import (
 
 type server struct {
 	echo    *echo.Echo
-	handler *handler.Handler
+	handler *api.Handler
 }
 
 func New(kn knative.Knative) *server {
 	srv := &server{
 		echo:    echo.New(),
-		handler: handler.New(kn),
+		handler: api.NewHandler(kn),
 	}
 
 	srv.setupMiddlewares()
