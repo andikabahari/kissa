@@ -28,7 +28,7 @@ func newRevisionResponse(obj knative.RevisionItem) revisionResponse {
 }
 
 func newRevisionResponses(obj knative.RevisionList) []revisionResponse {
-	resp := make([]revisionResponse, len(obj.Items))
+	resp := make([]revisionResponse, 0, len(obj.Items))
 	for _, item := range obj.Items {
 		resp = append(resp, newRevisionResponse(item))
 	}

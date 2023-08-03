@@ -32,7 +32,7 @@ func newServiceResponse(obj knative.ServiceItem) serviceResponse {
 }
 
 func newServiceResponses(obj knative.ServiceList) []serviceResponse {
-	resp := make([]serviceResponse, len(obj.Items))
+	resp := make([]serviceResponse, 0, len(obj.Items))
 	for _, item := range obj.Items {
 		resp = append(resp, newServiceResponse(item))
 	}
