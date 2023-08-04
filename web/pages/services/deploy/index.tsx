@@ -3,6 +3,7 @@ import {
   Button,
   Card,
   Label,
+  Select,
   Spinner,
   Textarea,
   TextInput,
@@ -10,6 +11,7 @@ import {
 import Head from 'next/head'
 import React, { useState } from 'react'
 import { Formik, Form, Field } from 'formik'
+import { createService } from '../../../utils/api'
 
 export default function Deploy() {
   const [alertSuccessOpen, setAlertSuccessOpen] = useState<boolean>(false)
@@ -43,10 +45,15 @@ export default function Deploy() {
           initialValues={{
             name: '',
             image: '',
-            containerPort: 0,
+            container_port: 80,
             env: '',
+            autoscaling_metric: 'cpu',
+            autoscaling_target: 80,
+            min_scale: 0,
+            max_scale: 3,
           }}
           onSubmit={async (values, { setSubmitting, resetForm }) => {
+            console.log(values)
             const env = values.env
               .split('\n')
               .map((val) => {
@@ -58,14 +65,9 @@ export default function Deploy() {
               })
               .filter(({ name }) => Boolean(name))
 
-            const res = await fetch('/api/services', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ...values, env }),
-            })
+            const res = await createService({ ...values, env })
             const body = await res.json()
-
-            if (body.code === 200) {
+            if (res.ok) {
               setAlertSuccessOpen(true)
               resetForm()
             } else {
@@ -103,17 +105,75 @@ export default function Deploy() {
                     required={true}
                   />
                 </div>
-                <div className='max-w-xs'>
+                <div className='sm:max-w-xs'>
                   <div className='mb-2 block'>
-                    <Label htmlFor='containerPort' value='Container port' />
+                    <Label htmlFor='container_port' value='Container port' />
                   </div>
                   <Field
                     as={TextInput}
-                    name='containerPort'
+                    name='container_port'
                     type='number'
-                    placeholder='8080'
+                    placeholder='80'
                     required={true}
                   />
+                </div>
+                <div className='sm:max-w-md'>
+                  <div className='grid md:grid-cols-2 md:gap-4'>
+                    <div className='mb-4 md:mb-0'>
+                      <div className='mb-2 block'>
+                        <Label htmlFor='autoscaling_metric' value='Metric' />
+                      </div>
+                      <Field
+                        as={Select}
+                        name='autoscaling_metric'
+                        required={true}
+                      >
+                        <option value='cpu'>CPU</option>
+                        <option value='rps'>RPS</option>
+                        <option value='memory'>Memory</option>
+                      </Field>
+                    </div>
+                    <div>
+                      <div className='mb-2 block'>
+                        <Label htmlFor='autoscaling_target' value='Target' />
+                      </div>
+                      <Field
+                        as={TextInput}
+                        name='autoscaling_target'
+                        type='number'
+                        placeholder='80'
+                        required={true}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className='max-w-md'>
+                  <div className='grid md:grid-cols-2 md:gap-4'>
+                    <div className='mb-4 md:mb-0'>
+                      <div className='mb-2 block'>
+                        <Label htmlFor='min_scale' value='Min scale' />
+                      </div>
+                      <Field
+                        as={TextInput}
+                        name='min_scale'
+                        type='number'
+                        placeholder='0'
+                        required={true}
+                      />
+                    </div>
+                    <div>
+                      <div className='mb-2 block'>
+                        <Label htmlFor='max_scale' value='Max scale' />
+                      </div>
+                      <Field
+                        as={TextInput}
+                        name='max_scale'
+                        type='number'
+                        placeholder='3'
+                        required={true}
+                      />
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <div className='mb-2 block'>

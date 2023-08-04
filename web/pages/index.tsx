@@ -1,12 +1,10 @@
-import useSWR from 'swr'
 import Link from 'next/link'
 import { Badge, Table } from 'flowbite-react'
 import Head from 'next/head'
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json())
+import { getServices } from '../utils/api'
 
 export default function Home() {
-  const { data: services } = useSWR('/api/services', fetcher)
+  const { data: services, error, isLoading } = getServices()
 
   return (
     <>
@@ -24,45 +22,53 @@ export default function Home() {
             </Table.HeadCell>
           </Table.Head>
           <Table.Body className='divide-y'>
-            {services?.data?.map((val: any, idx: number) => (
-              <Table.Row
-                key={idx}
-                className='bg-white dark:border-gray-700 dark:bg-gray-800'
-              >
-                <Table.Cell className='whitespace-nowrap font-medium text-gray-900 dark:text-white'>
-                  <Link
-                    href={val.status?.url}
-                    className='text-blue-500 ease-linear duration-200 hover:text-blue-700 hover:cursor-pointer'
-                  >
-                    {val.metadata?.name}
-                  </Link>
-                </Table.Cell>
-                <Table.Cell>
-                  <div className='inline-block'>
-                    {val.status?.conditions?.some(
-                      ({ status }: any) => status === 'False'
-                    ) ? (
-                      <Badge color='failure'>False</Badge>
-                    ) : (
-                      <Badge color='success'>True</Badge>
-                    )}
-                  </div>
-                </Table.Cell>
-                <Table.Cell>
-                  {val.spec?.template?.metadata?.annotations?.[
-                    'client.knative.dev/updateTimestamp'
-                  ] || val.metadata?.creationTimestamp}
-                </Table.Cell>
-                <Table.Cell>
-                  <Link
-                    href={`/services/details/${val.metadata?.name}`}
-                    className='text-blue-500 ease-linear duration-200 hover:text-blue-700 hover:cursor-pointer'
-                  >
-                    Details
-                  </Link>
+            {isLoading ? (
+              <Table.Row>
+                <Table.Cell colSpan={4} className='bg-white'>
+                  feching data...
                 </Table.Cell>
               </Table.Row>
-            ))}
+            ) : error ? (
+              <Table.Row>
+                <Table.Cell colSpan={4} className='bg-white'>
+                  {error.message}
+                </Table.Cell>
+              </Table.Row>
+            ) : (
+              services.map((val: any, idx: number) => (
+                <Table.Row
+                  key={idx}
+                  className='bg-white dark:border-gray-700 dark:bg-gray-800'
+                >
+                  <Table.Cell className='whitespace-nowrap font-medium text-gray-900 dark:text-white'>
+                    <Link
+                      href={val.url}
+                      className='text-blue-500 ease-linear duration-200 hover:text-blue-700 hover:cursor-pointer'
+                    >
+                      {val.name}
+                    </Link>
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className='inline-block'>
+                      {val.ready ? (
+                        <Badge color='success'>True</Badge>
+                      ) : (
+                        <Badge color='failure'>False</Badge>
+                      )}
+                    </div>
+                  </Table.Cell>
+                  <Table.Cell>{val.last_deployed}</Table.Cell>
+                  <Table.Cell>
+                    <Link
+                      href={`/services/details/${val.name}`}
+                      className='text-blue-500 ease-linear duration-200 hover:text-blue-700 hover:cursor-pointer'
+                    >
+                      Details
+                    </Link>
+                  </Table.Cell>
+                </Table.Row>
+              ))
+            )}
           </Table.Body>
         </Table>
       </div>
