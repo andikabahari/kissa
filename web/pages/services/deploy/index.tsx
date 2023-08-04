@@ -121,7 +121,10 @@ export default function Deploy() {
                   <div className='grid md:grid-cols-2 md:gap-4'>
                     <div className='mb-4 md:mb-0'>
                       <div className='mb-2 block'>
-                        <Label htmlFor='autoscaling_metric' value='Metric' />
+                        <Label
+                          htmlFor='autoscaling_metric'
+                          value='Autoscaling metric'
+                        />
                       </div>
                       <Field
                         as={Select}
@@ -135,7 +138,10 @@ export default function Deploy() {
                     </div>
                     <div>
                       <div className='mb-2 block'>
-                        <Label htmlFor='autoscaling_target' value='Target' />
+                        <Label
+                          htmlFor='autoscaling_target'
+                          value='Autoscaling target'
+                        />
                       </div>
                       <Field
                         as={TextInput}

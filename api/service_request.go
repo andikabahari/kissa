@@ -13,10 +13,34 @@ type serviceRequest struct {
 		Name  string `json:"name"`
 		Value string `json:"value"`
 	} `json:"env"`
-	AutoscalingMetric string `json:"autoscaling_metric"`
-	AutoscalingTarget int    `json:"autoscaling_target"`
-	MaxScale          int    `json:"max_scale"`
-	MinScale          int    `json:"min_scale"`
+	AutoscalingMetric autoscalingMetric `json:"autoscaling_metric"`
+	AutoscalingTarget int               `json:"autoscaling_target"`
+	MaxScale          int               `json:"max_scale"`
+	MinScale          int               `json:"min_scale"`
+}
+
+type autoscalingMetric string
+
+const (
+	autoscalingMetricCPU    autoscalingMetric = "cpu"
+	autoscalingMetricRPS    autoscalingMetric = "rps"
+	autoscalingMetricMemory autoscalingMetric = "memory"
+)
+
+func autoscalingClass(metric autoscalingMetric) string {
+	switch metric {
+	case autoscalingMetricRPS:
+		return "kpa.autoscaling.knative.dev"
+	case autoscalingMetricCPU, autoscalingMetricMemory:
+		return "hpa.autoscaling.knative.dev"
+	default:
+		return ""
+	}
+}
+
+type serviceTemplateVars struct {
+	serviceRequest
+	AutoscalingClass string
 }
 
 const serviceTemplate = `{
@@ -29,6 +53,7 @@ const serviceTemplate = `{
 		"template": {
 			"metadata": {
 				"annotations": {
+					"autoscaling.knative.dev/class": "{{.AutoscalingClass}}",
 					"autoscaling.knative.dev/metric": "{{.AutoscalingMetric}}",
 					"autoscaling.knative.dev/target": "{{.AutoscalingTarget}}",
 					"autoscaling.knative.dev/min-scale": "{{.MinScale}}",
@@ -61,7 +86,7 @@ const serviceTemplate = `{
 	}
 }`
 
-func serviceBuf(request serviceRequest) (*bytes.Buffer, error) {
+func serviceBuf(request serviceTemplateVars) (*bytes.Buffer, error) {
 	tmpl, err := template.New("service").Parse(serviceTemplate)
 	if err != nil {
 		return nil, err

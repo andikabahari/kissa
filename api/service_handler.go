@@ -65,7 +65,16 @@ func (h *Handler) CreateService(c echo.Context) error {
 		return err
 	}
 
-	buf, err := serviceBuf(request)
+	class := autoscalingClass(request.AutoscalingMetric)
+	if class == "" {
+		return jsonResponse(c, http.StatusBadRequest, "unsupported autoscaling metric", nil)
+	}
+
+	vars := serviceTemplateVars{
+		serviceRequest:   request,
+		AutoscalingClass: class,
+	}
+	buf, err := serviceBuf(vars)
 	if err != nil {
 		return err
 	}
@@ -103,7 +112,16 @@ func (h *Handler) UpdateService(c echo.Context) error {
 	serviceName := c.Param("service_name")
 	request.Name = serviceName
 
-	buf, err := serviceBuf(request)
+	class := autoscalingClass(request.AutoscalingMetric)
+	if class == "" {
+		return jsonResponse(c, http.StatusBadRequest, "unsupported autoscaling metric", nil)
+	}
+
+	vars := serviceTemplateVars{
+		serviceRequest:   request,
+		AutoscalingClass: class,
+	}
+	buf, err := serviceBuf(vars)
 	if err != nil {
 		return err
 	}
