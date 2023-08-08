@@ -33,3 +33,9 @@ export const createService = async (body: any) => {
   })
   return res
 }
+
+export const getRevisions = (serviceName?: string) => {
+  const url = new URL('api/revisions', baseUrl)
+  if (serviceName) url.searchParams.set('service_name', serviceName)
+  return useSWR(url.toString(), fetcher)
+}
